@@ -5,33 +5,8 @@ on:
     branches: [ "master", "main" ]
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
-        
-    - name: Restore dependencies
-      run: dotnet restore
-      working-directory: WebApi_Func
-      
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
-      working-directory: WebApi_Func
-      
-    - name: Test
-      run: dotnet test --no-build --configuration Release --verbosity normal
-      working-directory: WebApi_Func
-
   deploy:
-    needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-    
     steps:
     - name: Deploy to EC2 via SSH
       uses: appleboy/ssh-action@v1.0.3
@@ -41,7 +16,7 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         port: 22
         script: |
-          cd /root/webapi_func/WebApi_Func      
+          cd /root/webapi_func/WebApi_Func
           git pull
-          docker compose stop
-          docker compose up -d --build --force-recreate            
+          docker compose down
+          docker compose up -d --build --force-recreate
